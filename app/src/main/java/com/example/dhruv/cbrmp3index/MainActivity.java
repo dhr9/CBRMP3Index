@@ -29,8 +29,11 @@ import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static String ACTIVITY_KEY = "key";
-    public static String DATA_KEY = "data";
+    public static String KEY_ACTIVITY = "key";
+    public static String KEY_FLAG = "flag";
+
+    public static String FLAG_STANDARD = "standard";
+    public static String FLAG_MARKED = "marked";
 
     @BindView(R.id.menu_list_view)
     RecyclerView menuListView;
@@ -51,9 +54,6 @@ public class MainActivity extends AppCompatActivity {
 
         showLoading();
 
-        final Intent intent = getIntent();
-        PARENT_TAG = intent.getStringExtra(ACTIVITY_KEY);
-
         DataDbHelper dbHelper = new DataDbHelper(this);
         mDb = dbHelper.getWritableDatabase();
 
@@ -68,15 +68,33 @@ public class MainActivity extends AppCompatActivity {
 
                 ItemViewModel item = mAdapter.getItems().get(positionStart);
                 StoredDataModel model = DatabaseOperations.getRowById(mDb, item.getUniqueID());
-                model.setRenamedValue(item.getRenamedName());
-                model.setExtraInfo(item.getExtraInfo());
-                model.setChanged(item.isChanged());
-                DatabaseOperations.updateRowById(mDb, model);
+                if(model!=null) {
+                    model.setRenamedValue(item.getRenamedName());
+                    model.setExtraInfo(item.getExtraInfo());
+                    model.setChanged(item.isChanged());
+                    DatabaseOperations.updateRowById(mDb, model);
+                } else {
+                    Toast.makeText(getApplicationContext(),"NO such row found: "+item.getUniqueID(),
+                            Toast.LENGTH_LONG).show();
+                }
             }
         });
 
-        getData();
-        setData();
+        issueData();
+    }
+
+    private void issueData() {
+        final Intent intent = getIntent();
+
+        String flag = intent.getStringExtra(KEY_FLAG);
+
+        if (flag.equals(FLAG_STANDARD)) {
+            PARENT_TAG = intent.getStringExtra(KEY_ACTIVITY);
+
+
+            getData();
+            setData();
+        }
         stopLoading();
     }
 
@@ -87,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
         menuInflater.inflate(R.menu.main_menu, menu);
 
         MenuItem mGlobal = menu.findItem(R.id.search_global);
-        if(PARENT_TAG.equals(LoadingActivity.PARENT_TAG_VALUE)){
+        if (PARENT_TAG.equals(LoadingActivity.PARENT_TAG_VALUE)) {
             mGlobal.setVisible(true);
         }
 
@@ -98,15 +116,15 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.get_marked:
-                Toast.makeText(this,"Get Marked",Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Get Marked", Toast.LENGTH_SHORT).show();
                 return true;
 
             case R.id.search_local:
-                Toast.makeText(this,"Search Local",Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Search Local", Toast.LENGTH_SHORT).show();
                 return true;
 
             case R.id.search_global:
-                Toast.makeText(this,"Search Global",Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Search Global", Toast.LENGTH_SHORT).show();
                 return true;
 
             default:
@@ -148,8 +166,14 @@ public class MainActivity extends AppCompatActivity {
 
     public static Intent createStandardIntent(Context context, String parent) {
         Intent intent = new Intent(context, MainActivity.class);
-        intent.putExtra(ACTIVITY_KEY, parent);
+        intent.putExtra(KEY_ACTIVITY, parent);
+        intent.putExtra(KEY_FLAG,FLAG_STANDARD);
+        return intent;
+    }
 
+    public static Intent createMarkedIntent(Context context) {
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.putExtra(KEY_FLAG,FLAG_MARKED);
         return intent;
     }
 
