@@ -29,11 +29,11 @@ import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static String KEY_ACTIVITY = "key";
-    public static String KEY_FLAG = "flag";
+    public final static String KEY_ACTIVITY = "key";
+    public final static String KEY_FLAG = "flag";
 
-    public static String FLAG_STANDARD = "standard";
-    public static String FLAG_MARKED = "marked";
+    public final static String FLAG_STANDARD = "standard";
+    public final static String FLAG_MARKED = "marked";
 
     @BindView(R.id.menu_list_view)
     RecyclerView menuListView;
@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
     MenuAdapter mAdapter = new MenuAdapter();
     ActivityViewModel activityViewModel = new ActivityViewModel();
 
-    String PARENT_TAG;
+    String PARENT_TAG = "";
     SQLiteDatabase mDb;
 
     @Override
@@ -88,12 +88,16 @@ public class MainActivity extends AppCompatActivity {
 
         String flag = intent.getStringExtra(KEY_FLAG);
 
-        if (flag.equals(FLAG_STANDARD)) {
-            PARENT_TAG = intent.getStringExtra(KEY_ACTIVITY);
-
-
-            getData();
-            setData();
+        switch (flag){
+            case FLAG_STANDARD:
+                PARENT_TAG = intent.getStringExtra(KEY_ACTIVITY);
+                getData();
+                setData();
+                break;
+            default:
+                Toast.makeText(getApplicationContext(),"Unknown Flag",Toast.LENGTH_SHORT).show();
+                finish();
+                break;
         }
         stopLoading();
     }
@@ -116,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.get_marked:
-                Toast.makeText(this, "Get Marked", Toast.LENGTH_SHORT).show();
+                startActivity(createMarkedIntent(getApplicationContext()));
                 return true;
 
             case R.id.search_local:
